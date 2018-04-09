@@ -1,3 +1,6 @@
+"""
+Post-process Mallet tmstate output to view topics
+"""
 from __future__ import division
 import phrasehelp
 from collections import defaultdict, Counter, OrderedDict
@@ -45,6 +48,6 @@ for k in pp.components_[0].argsort():
     # print ", ".join("%s (%s)" % (id2word[wi],wc[wi]) for wi in tops)
     # print ", ".join("%s" % id2word[wi] for wi in tops)
     # pprint(phrase_merge2( wc, 20 ))
-    print ", ".join(phrasehelp.pick_from_cluster(c) for c in phrasehelp.phrase_merge2(wc, 20))
+    print ", ".join(phrasehelp.pick_from_cluster(c) for c in phrasehelp.phrase_merge2(wc, 20, id2word))
 
 
