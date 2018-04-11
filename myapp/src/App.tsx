@@ -5,37 +5,66 @@ import {Corpus} from './models';
 
 interface StateInterface {
   corpusUrl?: string
+  corpus?: Corpus;
 }
 
-class App extends React.Component<StateInterface> {
+class App extends React.Component<{},StateInterface> {
   state:StateInterface;
-  corpus:Corpus;
+  
   constructor(props:any) {
     super(props);
     this.state = {corpusUrl:"http://localhost:8000/tmrun/billbudget/sample"};
-    this.handleChange = this.handleChange.bind(this);
+    this.loadCorpus();
+    // this.handleChange = this.handleChange.bind(this);
   }
   async loadCorpus() {
-    this.corpus = await models.loadCorpus(this.state.corpusUrl);
-    console.log("LOADED CORPUS " + this.corpus.numDocs());
+    this.setState({corpus: await models.loadCorpus(this.state.corpusUrl)});  
+    console.log("LOADED CORPUS ");
   }
 
   handleChange = (e) => {
+    // console.log(e);
     console.log("NEW URL "+e.target.value);
     this.setState({corpusUrl: e.target.value});
     this.loadCorpus();
-    return true;
-  };
+  }
+
   render() {
     return (
 <div className="App">
 <header className="App-header">
 </header>
-Corpus URL: <input type="text" name="corpus_url" value={this.state.corpusUrl} onChange={this.handleChange} />
-<br/> 
+<form onSubmit={(e)=>{e.preventDefault()}}>
+  Corpus URL: <input style={{width:"800px",border:"1px solid gray"}} type="text" name="corpus_url" value={this.state.corpusUrl} onChange={this.handleChange} />
+  <br/>
+  <input type="submit" value="Update settings" />
+</form>
+<div>
+  {this.state.corpus && this.state.corpus.numDocs()} docs
+</div>
+<DocList app={this} />
 </div>
     );
   }
 }
 
 export default App;
+
+
+class DocList extends React.Component<any,any> {
+  
+  render() {
+    let app:App = this.props.app;
+    let doclist = app.state.corpus && app.state.corpus.doclist;
+    doclist = doclist || [];
+    return (
+      <div className="DocList">
+      {
+        doclist.map((d:models.Document) =>
+          <div className="DocName" key={"DOCID_"+d.docid}>{d.docid}</div>
+        )
+      }
+      </div>
+    )
+  }
+}

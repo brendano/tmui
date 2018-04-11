@@ -7,12 +7,18 @@ import axios, {AxiosResponse} from 'axios';
 
 export class Corpus {
   docid2doc: object = {};
-  doclist: string[] = [];
+  doclist: Document[] = [];
   constructor() {
   }
   numDocs() {
     return this.doclist.length;
   }
+}
+
+export interface Document {
+  docid: string
+  text?: string
+  // will it allow more?
 }
 
 /* this function is a bad idea */
