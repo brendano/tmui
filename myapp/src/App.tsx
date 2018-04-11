@@ -6,12 +6,12 @@ import * as models from './models';
 import {Corpus} from './models';
 
 interface AppState {
-  corpusUrl: string
+  corpusUrl: string;
   corpus?: Corpus;
+  docidSelection?: string;
 }
 
 class App extends React.Component<{},AppState> {
-  state:AppState;
   
   constructor(props:any) {
     super(props);
@@ -21,12 +21,9 @@ class App extends React.Component<{},AppState> {
   }
   async loadCorpus() {
     this.setState({corpus: await models.loadCorpus(this.state.corpusUrl)});  
-    console.log("LOADED CORPUS ");
   }
 
   handleChange = (e) => {
-    // console.log(e);
-    console.log("NEW URL "+e.target.value);
     this.setState({corpusUrl: e.target.value});
     this.loadCorpus();
   }
@@ -44,7 +41,14 @@ class App extends React.Component<{},AppState> {
 <div>
   {this.state.corpus && this.state.corpus.numDocs()} docs
 </div>
+<table>
+<tr><td style={{verticalAlign:"top"}}>
 <DocList app={this} />
+</td>
+<td style={{verticalAlign:"top"}}>
+<DocViewer corpus={this.state.corpus} docid={this.state.docidSelection} />
+</td></tr>
+</table>
 </div>
     );
   }
@@ -54,7 +58,6 @@ export default App;
 
 
 interface DocListState {
-  selection: string;
 }
 class DocList extends React.Component<any,DocListState> {
   constructor(props) {
@@ -65,18 +68,42 @@ class DocList extends React.Component<any,DocListState> {
     let app:App = this.props.app;
     let doclist = app.state.corpus && app.state.corpus.doclist;
     doclist = doclist || [];
-    return (
-      <div className="DocList" style={{width:200,border:"1px solid gray"}}>
+    return <div className="DocList" style={{width:200,border:"1px solid gray"}}>
       {
-        doclist.map((d:models.Document) =>
-          <div className={"DocName " + (d.docid===this.state.selection ? "sel" : "")} 
+        doclist.map( (d:models.Document) => {
+          let sel = d.docid!==undefined && d.docid===app.state.docidSelection;
+          return <div 
+            className={"DocName " + (sel ? "sel" : "")}
             key={"DOCID_"+d.docid}
-            onClick={e=> {console.log(d.docid); this.setState({selection:d.docid}) }}
+            onClick={e=> {app.setState({docidSelection:d.docid }) }}
           >{d.docid}</div>
-        )
+        })
       }
-      </div>
-    )
+    </div>;
   }
 }
 
+interface DocViewerProps {
+  docid:string;
+  corpus:Corpus;
+}
+
+class DocViewer extends React.Component<DocViewerProps,{}> {
+  render() {
+    let text = null;
+    if (this.props.corpus !== undefined) {
+      let doc = this.props.corpus.docid2doc[this.props.docid];
+      text = doc ? doc.text : "";
+    } else {
+      text = "";
+    }
+    return (
+      <div style={{
+        border:"1px solid gray",
+        whiteSpace: "pre-wrap"}}
+      >{text}
+      </div>
+    );
+  }
+
+}
