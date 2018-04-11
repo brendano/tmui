@@ -1,15 +1,17 @@
 import * as React from 'react';
+import 'react-virtualized/styles.css'
+import { Column, Table } from 'react-virtualized'
 import './App.css';
 import * as models from './models';
 import {Corpus} from './models';
 
-interface StateInterface {
-  corpusUrl?: string
+interface AppState {
+  corpusUrl: string
   corpus?: Corpus;
 }
 
-class App extends React.Component<{},StateInterface> {
-  state:StateInterface;
+class App extends React.Component<{},AppState> {
+  state:AppState;
   
   constructor(props:any) {
     super(props);
@@ -51,20 +53,30 @@ class App extends React.Component<{},StateInterface> {
 export default App;
 
 
-class DocList extends React.Component<any,any> {
-  
+interface DocListState {
+  selection: string;
+}
+class DocList extends React.Component<any,DocListState> {
+  constructor(props) {
+    super(props);
+    this.state = {selection:null};
+  }
   render() {
     let app:App = this.props.app;
     let doclist = app.state.corpus && app.state.corpus.doclist;
     doclist = doclist || [];
     return (
-      <div className="DocList">
+      <div className="DocList" style={{width:200,border:"1px solid gray"}}>
       {
         doclist.map((d:models.Document) =>
-          <div className="DocName" key={"DOCID_"+d.docid}>{d.docid}</div>
+          <div className={"DocName " + (d.docid===this.state.selection ? "sel" : "")} 
+            key={"DOCID_"+d.docid}
+            onClick={e=> {console.log(d.docid); this.setState({selection:d.docid}) }}
+          >{d.docid}</div>
         )
       }
       </div>
     )
   }
 }
+
