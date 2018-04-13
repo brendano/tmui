@@ -11,34 +11,48 @@ outfilename = tmstate_filename.replace(".tmstate.gz","") + ".tminfo.json"
 print "%s => %s" % (tmstate_filename, outfilename)
 
 word2id,id2word={},[]
-# doc2id,id2doc={},[]
+docname2docnum = {}  ## mallet's notion of docname and their integer docnum.  what we're calling their docname is likely the same as what our app calls a docid.
+doclengths = Counter() # index by docname
 
 n_topic_word = Counter()
 n_topic_doc = Counter()
 n_topic = Counter()
 
-for line in gzip.open(tmstate_filename):
+seen_docs = set()
+
+for i,line in enumerate(gzip.open(tmstate_filename)):
+    if i>10000:break
     if line.startswith("#"): continue
-    docid, doc, pos, wordid, word, topic = line.split()
+    docnum, docname, pos, wordid, word, topic = line.split()
+    docnum=int(docnum)
+    if docname not in docname2docnum:
+        docname2docnum[docname] = docnum
     topic=int(topic)
     n_topic_word[topic,word] += 1
-    n_topic_doc[topic,doc] += 1
+    n_topic_doc[topic,docname] += 1
     n_topic[topic] += 1
+    doclengths[docname] += 1
     if word not in word2id:
         word2id[word] = len(word2id)
         id2word.append(word)
+num_docs = len(docname2docnum)
 num_topics = len(n_topic)
+assert set(xrange(num_topics)) == set(n_topic.keys())
+
 # n_topic = [n_topic[k] for k in xrange(num_topics)]
-# n_topic_word = [  
-#     [n_topic_word[k,id2word[w]] for w in xrange(len(id2word))]
-#     for k in xrange(num_topics)]
-print num_topics, n_topic
+n_topic_word_dicts = [  
+    {w:n_topic_word[k,w] for w in id2word if n_topic_word[k,w]}
+    for k in xrange(num_topics)]
+n_topic_doc_dicts = [
+    {docname:n_topic_doc[k,docname] for docname in docname2docnum if n_topic_doc[k,docname]}
+    for k in xrange(num_topics)]
 
 out = {}
 out['num_topics'] = num_topics
-out['n_topic'] = dict(n_topic)
-out['n_topic_word'] = dict(n_topic_word)
-out['n_topic_doc'] = dict(n_topic_doc)
+out['n_topic'] = [n_topic[k] for k in xrange(num_topics)]
+out['n_topic_word_dicts'] = n_topic_word_dicts
+out['n_topic_doc_dicts'] = n_topic_doc_dicts
+out['doclengths'] = dict(doclengths)
 out['vocab'] = id2word
 
 with open(outfilename,'w') as outfile:

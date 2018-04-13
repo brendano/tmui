@@ -1,2 +1,2 @@
 %.js: %.ts
-	tsc --lib es6 $<
+	tsc --lib DOM,ES6 $<

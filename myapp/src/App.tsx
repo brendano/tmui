@@ -1,6 +1,6 @@
 import * as React from 'react';
 import 'react-virtualized/styles.css'
-import { Column, Table } from 'react-virtualized'
+import { Column, Table, AutoSizer, CellMeasurer, Grid } from 'react-virtualized'
 import './App.css';
 import * as models from './models';
 import {Corpus} from './models';
@@ -15,15 +15,17 @@ class App extends React.Component<{},AppState> {
   
   constructor(props:any) {
     super(props);
-    this.state = {corpusUrl:"http://localhost:8000/tmrun/billbudget/sample"};
+    // this.state = {corpusUrl:"http://localhost:8000/tmrun/billbudget/sample"};
+    this.state = {corpusUrl:"http://localhost:8000/tmrun/billbudget/billparts.phrases.jsonl"};
+    
     this.loadCorpus();
-    // this.handleChange = this.handleChange.bind(this);
   }
   async loadCorpus() {
     this.setState({corpus: await models.loadCorpus(this.state.corpusUrl)});  
   }
 
   handleChange = (e) => {
+    // using this syntax, don't have to worry about .bind() to get 'this' right?
     this.setState({corpusUrl: e.target.value});
     this.loadCorpus();
   }
@@ -41,7 +43,7 @@ class App extends React.Component<{},AppState> {
 <div>
   {this.state.corpus && this.state.corpus.numDocs()} docs
 </div>
-<table>
+<table className="LayoutTable">
 <tr><td style={{verticalAlign:"top"}}>
 <DocList app={this} />
 </td>
@@ -64,22 +66,54 @@ class DocList extends React.Component<any,DocListState> {
     super(props);
     this.state = {selection:null};
   }
-  render() {
+  curdoclist() {
     let app:App = this.props.app;
     let doclist = app.state.corpus && app.state.corpus.doclist;
     doclist = doclist || [];
-    return <div className="DocList" style={{width:200,border:"1px solid gray"}}>
-      {
-        doclist.map( (d:models.Document) => {
-          let sel = d.docid!==undefined && d.docid===app.state.docidSelection;
-          return <div 
-            className={"DocName " + (sel ? "sel" : "")}
-            key={"DOCID_"+d.docid}
-            onClick={e=> {app.setState({docidSelection:d.docid }) }}
-          >{d.docid}</div>
-        })
-      }
-    </div>;
+    return doclist;
+  }
+  render() {
+    let app:App = this.props.app;
+    let doclist = this.curdoclist();
+    // console.log(doclist.map((x) => x!==undefined && x!==null ? "ok" : x));
+
+    return <Table
+        className="DocList"
+        width={300}
+        height={300}
+        headerHeight={20}
+        rowHeight={20}
+        rowCount={doclist.length}
+        rowGetter={({index}) => {
+          let doclist = this.curdoclist();
+          // console.log(`${index}  ${doclist.length}`);
+          // if( ! (index < doclist.length)) throw "Wtf";
+          // console.log("ROWGET DOCLIST " + doclist);
+          return doclist[index];
+        }}
+        onRowClick={({ event, index, rowData }) => {
+          // rowData is a Document but the type system doesn't recognize it
+          console.log(rowData["docid"]);
+          app.setState({docidSelection: rowData["docid"]});
+        }}
+      >
+
+        <Column label="Docid" dataKey="docid" width={100} />
+      
+      </Table>;
+
+    // return <div className="DocList" style={{width:200,border:"1px solid gray"}}>
+    //   {
+    //     doclist.map( (d:models.Document) => {
+    //       let sel = d.docid!==undefined && d.docid===app.state.docidSelection;
+    //       return <div 
+    //         className={"DocName " + (sel ? "sel" : "")}
+    //         key={"DOCID_"+d.docid}
+    //         onClick={e=> {app.setState({docidSelection:d.docid }) }}
+    //       >{d.docid}</div>
+    //     })
+    //   }
+    // </div>;
   }
 }
 
@@ -98,10 +132,10 @@ class DocViewer extends React.Component<DocViewerProps,{}> {
       text = "";
     }
     return (
-      <div style={{
-        border:"1px solid gray",
-        whiteSpace: "pre-wrap"}}
-      >{text}
+      <div className="DocViewer container">
+      <div className="DocViewer content">
+      {text}
+      </div>
       </div>
     );
   }

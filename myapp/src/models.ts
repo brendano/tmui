@@ -52,4 +52,11 @@ export async function loadCorpus(url:string) {
     });
 }
 
+export interface TopicModelInfo {
+  num_topics:number;
+  n_topic:number;
+  n_topic_word_dicts: object[];
+  n_topic_doc_dicts: object[];
+}
+
 export * from './models';
