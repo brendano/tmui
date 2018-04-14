@@ -1,13 +1,14 @@
 import * as React from 'react';
 import 'react-virtualized/styles.css'
-import { Column, Table, AutoSizer, CellMeasurer, Grid } from 'react-virtualized'
+import { Column, Table, AutoSizer, CellMeasurer, Grid } from 'react-virtualized';
 import './App.css';
 import * as models from './models';
-import {Corpus} from './models';
 
 interface AppState {
   corpusUrl: string;
-  corpus?: Corpus;
+  topicModelUrl?:string;
+  corpus?: models.Corpus;
+  topicModel?: models.TopicModel;
   docidSelection?: string;
 }
 
@@ -16,12 +17,18 @@ class App extends React.Component<{},AppState> {
   constructor(props:any) {
     super(props);
     // this.state = {corpusUrl:"http://localhost:8000/tmrun/billbudget/sample"};
-    this.state = {corpusUrl:"http://localhost:8000/tmrun/billbudget/billparts.phrases.jsonl"};
-    
+    this.state = {
+      corpusUrl:"http://localhost:8000/tmrun/billbudget/billparts.phrases.jsonl",
+      topicModelUrl:"http://localhost:8000/tmrun/out1.tminfo.json"
+    };
     this.loadCorpus();
+    this.loadTopicModel();
   }
   async loadCorpus() {
     this.setState({corpus: await models.loadCorpus(this.state.corpusUrl)});  
+  }
+  async loadTopicModel() {
+    this.setState({topicModel: await models.loadTopicModel(this.state.topicModelUrl)});
   }
 
   handleChange = (e) => {
@@ -43,14 +50,14 @@ class App extends React.Component<{},AppState> {
 <div>
   {this.state.corpus && this.state.corpus.numDocs()} docs
 </div>
-<table className="LayoutTable">
+<table className="LayoutTable"><tbody>
 <tr><td style={{verticalAlign:"top"}}>
 <DocList app={this} />
 </td>
 <td style={{verticalAlign:"top"}}>
 <DocViewer corpus={this.state.corpus} docid={this.state.docidSelection} />
 </td></tr>
-</table>
+</tbody></table>
 </div>
     );
   }
@@ -119,7 +126,7 @@ class DocList extends React.Component<any,DocListState> {
 
 interface DocViewerProps {
   docid:string;
-  corpus:Corpus;
+  corpus:models.Corpus;
 }
 
 class DocViewer extends React.Component<DocViewerProps,{}> {

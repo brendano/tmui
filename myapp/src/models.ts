@@ -1,5 +1,7 @@
 // import {Promise} from 'es6-promise';
 import axios, {AxiosResponse} from 'axios';
+import * as utils from './utils';
+import * as _ from 'lodash';
 // import { defaultCoreCipherList } from 'constants';
 // import wait from 'wait.for-es6';
 // var wait=require('wait.for-es6');
@@ -52,11 +54,59 @@ export async function loadCorpus(url:string) {
     });
 }
 
+export async function loadTopicModel(url:string) {
+  let a = await axios.get("http://localhost:8000/tmrun/out1.tminfo.json");
+  let b = await a.data;
+  let c = new TopicModel(b);
+  console.log(`loaded TM numtopics ${c.num_topics} topic sizes ${c.n_topic}`);
+  return c;
+}
+
 export interface TopicModelInfo {
-  num_topics:number;
-  n_topic:number;
-  n_topic_word_dicts: object[];
-  n_topic_doc_dicts: object[];
+  readonly num_topics:number;
+  readonly n_topic:number;
+  readonly n_topic_word_dicts: Array<Map<string,number>>;
+  readonly n_topic_doc_dicts: Array<Map<string,number>>;
+  readonly doclengths:object;
+  readonly vocab:string[];
+}
+
+export class TopicModel implements TopicModelInfo {
+  readonly num_topics:number;
+  readonly n_topic:number;
+  readonly n_topic_word_dicts: Array<Map<string,number>>;
+  readonly n_topic_doc_dicts: Array<Map<string,number>>;
+  readonly doclengths:object;
+  readonly vocab:string[];
+
+  constructor(data:TopicModelInfo) {
+    // should i use .keys() or something else?
+    for (let key in data) {
+      this[key] = data[key];
+    }
+  }
+  
+  docTopicProbs(docid:string) {
+    let probs = new Float32Array(this.num_topics);
+    let N = this.doclengths[docid];
+    if (N==0) return probs.fill(1/this.num_topics);
+    for (let k=0; k<this.num_topics; k++) {
+      probs[k] = this.n_topic_doc_dicts[k][docid] || 0.0;
+      probs[k] /= N;
+    }
+    if ( Math.abs(utils.arraysum(probs) - 1) > 1e-5) throw "normalize nope";
+    return probs;
+  }
+
+  topicWords(topic:number, topk:number): string[] {
+    let wc = this.n_topic_word_dicts[topic];
+    let words = this.vocab.filter( (w)=>wc[w] && wc[w]>0);
+    let scorefn = (w) => -wc[w];  // prob ranking .. or could use pmi, hpmi...
+    words = _.sortBy(words, scorefn);
+    words = words.slice(0,topk);
+    return words;
+  }
+
 }
 
 export * from './models';

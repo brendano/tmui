@@ -11,6 +11,12 @@ async function f2() {
   let a = await axios.get("http://localhost:8000/tmrun/out1.tminfo.json");
   let b = await a.data;
   let c:TopicModelInfo = b;
+  let d:models.TopicModel = new models.TopicModel(b);
+  console.log(d.num_topics);
+  console.log(d.docTopicProbs("billbudget/billparts.phrases.malletdir/page138.txt"));
+  for (let k=0; k<d.num_topics; k++) {
+    console.log(k + " || " + d.topicWords(k,10));
+  }
   // console.log(JSON.parse(b));
   // let c:TopicModelInfo = b;
   // console.log(c);
