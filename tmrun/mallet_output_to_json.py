@@ -11,7 +11,7 @@ outfilename = tmstate_filename.replace(".tmstate.gz","") + ".tminfo.json"
 print "%s => %s" % (tmstate_filename, outfilename)
 
 word2id,id2word={},[]
-docname2docnum = {}  ## mallet's notion of docname and their integer docnum.  what we're calling their docname is likely the same as what our app calls a docid.
+docname2docnum = {}  ## mallet's notion of docname and their integer docnum.  what we're calling their docname is very similar to what our app calls a docid.
 doclengths = Counter() # index by docname
 
 n_topic_word = Counter()
@@ -25,6 +25,8 @@ for i,line in enumerate(gzip.open(tmstate_filename)):
     if line.startswith("#"): continue
     docnum, docname, pos, wordid, word, topic = line.split()
     docnum=int(docnum)
+    # mallet docname is a full file path. revise to just the docid,
+    # assuming  convention of DOCID.txt
     docname = docname.split("/")[-1].replace(".txt","")
     if docname not in docname2docnum:
         docname2docnum[docname] = docnum
