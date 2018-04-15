@@ -51,14 +51,17 @@ class App extends React.Component<{},AppState> {
 <div>
   {this.state.corpus && this.state.corpus.numDocs()} docs
 </div>
-<table className="LayoutTable"><tbody>
-<tr><td style={{verticalAlign:"top"}}>
-<DocList app={this} />
-</td>
-<td style={{verticalAlign:"top"}}>
-<DocViewer corpus={this.state.corpus} docid={this.state.docidSelection} />
-</td></tr>
-</tbody></table>
+<table className="LayoutTable"><tbody><tr>
+  <td style={{verticalAlign:"top"}}>
+      <TopicWordList topicModel={this.state.topicModel} />
+  </td>
+  <td style={{verticalAlign:"top"}}>
+    <DocList app={this} />
+  </td>
+  <td style={{verticalAlign:"top"}}>
+    <DocViewer corpus={this.state.corpus} docid={this.state.docidSelection} />
+  </td>
+</tr></tbody></table>
 </div>
     );
   }
@@ -91,7 +94,6 @@ class DocList extends React.Component<any,DocListState> {
   }
   topicProbCellRenderer = ({rowData}) => {
     let doc:models.Document = rowData;
-    console.log(doc.docid);
     let probs = this.topicModel().docTopicProbs(doc.docid);
     let x = Array.from(probs).map((prob,k)=> [prob,k])
       .filter(([p,k])=>p>0);
@@ -102,7 +104,6 @@ class DocList extends React.Component<any,DocListState> {
             <span className="topicProb">{(Math.max(prob,0.01)*100).toFixed(0)}%</span>
           </span>
       );
-    console.log(s);
     return s;
   }
   render() {
@@ -119,19 +120,16 @@ class DocList extends React.Component<any,DocListState> {
       rowCount={doclist.length}
       rowGetter={({index}) => {
         let doclist = this.curdoclist();
-        // console.log(`${index}  ${doclist.length}`);
         // if( ! (index < doclist.length)) throw "Wtf";
-        // console.log("ROWGET DOCLIST " + doclist);
         return doclist[index];
       }}
       onRowClick={({ event, index, rowData }) => {
         // rowData is a Document but the type system doesn't recognize it. i'm using this wrong?
-        // console.log(rowData["docid"]);
         app.setState({docidSelection: rowData["docid"]});
       }}
     >
 
-      <Column label="Topics" dataKey="DONTUSE" width={200}
+      <Column label="Topics" dataKey="NA" width={200}
         cellDataGetter={(x) => null}
         cellRenderer={this.topicProbCellRenderer}
         />
@@ -164,4 +162,55 @@ class DocViewer extends React.Component<DocViewerProps,{}> {
     );
   }
 
+}
+
+interface TopicWordListProps {
+  topicModel:models.TopicModel;
+}
+interface TopicWordListState {
+  selected_topic: number;
+}
+class TopicWordList extends React.Component<TopicWordListProps,TopicWordListState> {
+  state={selected_topic:null};
+  renderTopicWords = ({rowData:index}) => {
+    console.log("RTW " + index);
+    let topic = index;   // todo change when resortable
+    let tm = this.props.topicModel;
+    if (!tm) return "";
+    
+    return <div className="TopicWords" key={"TW"+topic}
+      style={{whiteSpace:"normal", color:topicColor(topic)}}
+    >
+      {tm.topicWords(topic, 10).join(", ")}
+    </div>;
+  }
+  renderTopicNumber = ({rowData:i}) => {
+    return <div style={{color:topicColor(i)}} key={"TNUM"+i}>{i}</div>;
+  }
+  render() {
+    let tm = this.props.topicModel;
+    if (!tm) return "NULL TM";
+    return <Table className="TopicWordList" height={500} width={350}
+      headerHeight={20} rowHeight={40}
+      rowCount={tm.num_topics}
+      rowGetter={({index}) => index}
+    >
+      <Column label="Topic" dataKey="NA" width={20} cellDataGetter={(x)=>null}
+        cellRenderer={this.renderTopicNumber}
+      />
+
+      <Column label="Propor" dataKey="NA" width={50} cellDataGetter={(x)=>null}
+        style={{textAlign:"center"}}
+        cellRenderer={({rowData:i})=> {
+          let p = this.props.topicModel.topicGlobalProb(i);
+          return <span className="topicProb">{ (Math.max(p,.01)*100).toFixed(0)}%</span>
+        }}
+      />
+
+      <Column label="Words" dataKey="NA" width={300} cellDataGetter={(x)=>null}
+        cellRenderer={this.renderTopicWords} 
+      />
+
+    </Table>
+  }
 }

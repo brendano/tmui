@@ -100,6 +100,11 @@ export class TopicModel implements TopicModelInfo {
     return probs;
   }
 
+  public topicGlobalProb(topic:number) {
+    let Ncorpus = utils.arraysum(this.n_topic);
+    return this.n_topic[topic]/Ncorpus;
+  }
+
   topicWords(topic:number, topk:number): string[] {
     let wc = this.n_topic_word_dicts[topic];
     let words = this.vocab.filter( (w)=>wc[w] && wc[w]>0);
