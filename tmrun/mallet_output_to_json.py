@@ -21,10 +21,11 @@ n_topic = Counter()
 seen_docs = set()
 
 for i,line in enumerate(gzip.open(tmstate_filename)):
-    if i>10000:break
+    # if i>10000:break
     if line.startswith("#"): continue
     docnum, docname, pos, wordid, word, topic = line.split()
     docnum=int(docnum)
+    docname = docname.split("/")[-1].replace(".txt","")
     if docname not in docname2docnum:
         docname2docnum[docname] = docnum
     topic=int(topic)
