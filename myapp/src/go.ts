@@ -3,12 +3,12 @@ import {TopicModelInfo} from './models';
 import axios, {AxiosResponse} from 'axios';
 
 async function f1() {
-  let c = await models.loadCorpus("http://localhost:8000/tmrun/billbudget/sample");
+  let c = await models.loadCorpus("http://localhost:3000/tmrun/billbudget/sample");
   console.log(c.numDocs());    
 }
 
 async function f2() {
-  let a = await axios.get("http://localhost:8000/tmrun/out1.tminfo.json");
+  let a = await axios.get("http://localhost:3000/tmrun/out1.tminfo.json");
   let b = await a.data;
   let c:TopicModelInfo = b;
   let d:models.TopicModel = new models.TopicModel(b);

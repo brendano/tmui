@@ -55,9 +55,8 @@ export async function loadCorpus(url:string) {
 }
 
 export async function loadTopicModel(url:string) {
-  let a = await axios.get("http://localhost:8000/tmrun/out1.tminfo.json");
-  let b = await a.data;
-  let c = new TopicModel(b);
+  let a = await axios.get(url);
+  let c = new TopicModel(a.data);
   console.log(`loaded TM numtopics ${c.num_topics} topic sizes ${c.n_topic}`);
   return c;
 }
@@ -86,15 +85,18 @@ export class TopicModel implements TopicModelInfo {
     }
   }
   
-  docTopicProbs(docid:string) {
+  public docTopicProbs(docid:string) {
+    if (!this.doclengths[docid]) {
+      return new Float32Array(this.num_topics).fill(0);
+    }
     let probs = new Float32Array(this.num_topics);
     let N = this.doclengths[docid];
     if (N==0) return probs.fill(1/this.num_topics);
     for (let k=0; k<this.num_topics; k++) {
-      probs[k] = this.n_topic_doc_dicts[k][docid] || 0.0;
-      probs[k] /= N;
+      probs[k] = (this.n_topic_doc_dicts[k][docid] || 0.0) / N;
     }
-    if ( Math.abs(utils.arraysum(probs) - 1) > 1e-5) throw "normalize nope";
+    
+    if ( Math.abs(utils.arraysum(probs) - 1) > 1e-5) throw "normalization error";
     return probs;
   }
 

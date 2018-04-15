@@ -1,6 +1,8 @@
 import * as React from 'react';
 import 'react-virtualized/styles.css'
 import { Column, Table, AutoSizer, CellMeasurer, Grid } from 'react-virtualized';
+import * as d3 from 'd3';
+import * as _ from 'lodash';
 import './App.css';
 import * as models from './models';
 
@@ -16,10 +18,9 @@ class App extends React.Component<{},AppState> {
   
   constructor(props:any) {
     super(props);
-    // this.state = {corpusUrl:"http://localhost:8000/tmrun/billbudget/sample"};
     this.state = {
-      corpusUrl:"http://localhost:8000/tmrun/billbudget/billparts.phrases.jsonl",
-      topicModelUrl:"http://localhost:8000/tmrun/out1.tminfo.json"
+      corpusUrl: "/tmrun/billbudget/billparts.phrases.jsonl",
+      topicModelUrl: "/tmrun/out1.tminfo.json"
     };
     this.loadCorpus();
     this.loadTopicModel();
@@ -65,9 +66,14 @@ class App extends React.Component<{},AppState> {
 
 export default App;
 
+function topicColor(k:number) {
+  let xx = d3.schemeCategory10;
+  return xx[k % xx.length];
 
+}
 interface DocListState {
 }
+
 class DocList extends React.Component<any,DocListState> {
   constructor(props) {
     super(props);
@@ -79,48 +85,59 @@ class DocList extends React.Component<any,DocListState> {
     doclist = doclist || [];
     return doclist;
   }
+  topicModel() {
+    let app:App = this.props.app;
+    return app.state.topicModel;
+  }
+  topicProbCellRenderer = ({rowData}) => {
+    let doc:models.Document = rowData;
+    console.log(doc.docid);
+    let probs = this.topicModel().docTopicProbs(doc.docid);
+    let x = Array.from(probs).map((prob,k)=> [prob,k])
+      .filter(([p,k])=>p>0);
+    let s = _.sortBy(x, ([p,k])=> -p)
+      .map( ([prob,k],i)=>
+          <span className="docTopicProb" style={{color:topicColor(k)}}>
+            <span className="topicNum">{k}:</span>
+            <span className="topicProb">{(Math.max(prob,0.01)*100).toFixed(0)}%</span>
+          </span>
+      );
+    console.log(s);
+    return s;
+  }
   render() {
     let app:App = this.props.app;
     let doclist = this.curdoclist();
     // console.log(doclist.map((x) => x!==undefined && x!==null ? "ok" : x));
 
     return <Table
-        className="DocList"
-        width={300}
-        height={300}
-        headerHeight={20}
-        rowHeight={20}
-        rowCount={doclist.length}
-        rowGetter={({index}) => {
-          let doclist = this.curdoclist();
-          // console.log(`${index}  ${doclist.length}`);
-          // if( ! (index < doclist.length)) throw "Wtf";
-          // console.log("ROWGET DOCLIST " + doclist);
-          return doclist[index];
-        }}
-        onRowClick={({ event, index, rowData }) => {
-          // rowData is a Document but the type system doesn't recognize it
-          console.log(rowData["docid"]);
-          app.setState({docidSelection: rowData["docid"]});
-        }}
-      >
+      className="DocList"
+      width={300}
+      height={500}
+      headerHeight={20}
+      rowHeight={20}
+      rowCount={doclist.length}
+      rowGetter={({index}) => {
+        let doclist = this.curdoclist();
+        // console.log(`${index}  ${doclist.length}`);
+        // if( ! (index < doclist.length)) throw "Wtf";
+        // console.log("ROWGET DOCLIST " + doclist);
+        return doclist[index];
+      }}
+      onRowClick={({ event, index, rowData }) => {
+        // rowData is a Document but the type system doesn't recognize it. i'm using this wrong?
+        // console.log(rowData["docid"]);
+        app.setState({docidSelection: rowData["docid"]});
+      }}
+    >
 
-        <Column label="Docid" dataKey="docid" width={100} />
-      
-      </Table>;
-
-    // return <div className="DocList" style={{width:200,border:"1px solid gray"}}>
-    //   {
-    //     doclist.map( (d:models.Document) => {
-    //       let sel = d.docid!==undefined && d.docid===app.state.docidSelection;
-    //       return <div 
-    //         className={"DocName " + (sel ? "sel" : "")}
-    //         key={"DOCID_"+d.docid}
-    //         onClick={e=> {app.setState({docidSelection:d.docid }) }}
-    //       >{d.docid}</div>
-    //     })
-    //   }
-    // </div>;
+      <Column label="Topics" dataKey="DONTUSE" width={200}
+        cellDataGetter={(x) => null}
+        cellRenderer={this.topicProbCellRenderer}
+        />
+      <Column label="Docid" dataKey="docid" width={100} />
+    
+    </Table>;
   }
 }
 
