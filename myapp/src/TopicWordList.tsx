@@ -26,7 +26,7 @@ export class TopicWordList extends React.Component<TopicWordListProps,TopicWordL
     return <div className="TopicWords" key={"TW"+topic}
       style={{whiteSpace:"normal", verticalAlign:"top", color:A.topicColor(topic)}}
     >
-      {tm.topicWords(topic, 10).map((w)=>w.replace("_"," ")).join(", ")}
+      {tm.topicWords(topic, 10).map((w)=>w.replace(/_/g," ")).join(", ")}
     </div>;
   }
   renderTopicNumber = ({rowData:i}) => {

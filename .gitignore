@@ -1,9 +1,8 @@
+*.malletdir
 myapp/src/go.js
 myapp/src/models.js
 myapp/src/models.js
 myapp/src/utils.js
-tmrun/billbudget/*.malletdir
-tmrun/billbudget/*pages*
 tmrun/billbudget/billparts.jsonl
 tmrun/billbudget/billparts.phrases.jsonl
 tmrun/out1.mallet_import

@@ -21,8 +21,8 @@ class App extends React.Component<{},AppState> {
   constructor(props:any) {
     super(props);
     this.state = {
-      corpusUrl: "tmrun/billbudget/billparts.phrases.jsonl",
-      topicModelUrl: "tmrun/out1.tminfo.json"
+      corpusUrl:    "tmrun/sotu/sotu.phrases.jsonl",
+      topicModelUrl:"tmrun/sotu/sotu.tm10.tminfo.json"
     };
     this.loadCorpus();
     this.loadTopicModel();
@@ -34,10 +34,15 @@ class App extends React.Component<{},AppState> {
     this.setState({topicModel: await models.loadTopicModel(this.state.topicModelUrl)});
   }
 
-  handleChange = (e) => {
+  handleChangeCorpus = (e) => {
     // using this syntax, don't have to worry about .bind() to get 'this' right?
     this.setState({corpusUrl: e.target.value});
     this.loadCorpus();
+  }
+  handleChangeTM = (e) => {
+    // using this syntax, don't have to worry about .bind() to get 'this' right?
+    this.setState({topicModelUrl: e.target.value});
+    this.loadTopicModel();
   }
 
   render() {
@@ -46,7 +51,8 @@ class App extends React.Component<{},AppState> {
 <header className="App-header">
 </header>
 <form onSubmit={(e)=>{e.preventDefault()}}>
-  Corpus URL: <input style={{width:"800px",border:"1px solid gray"}} type="text" name="corpus_url" value={this.state.corpusUrl} onChange={this.handleChange} />
+  Corpus: <input style={{width:"200px",border:"1px solid gray"}} type="text" name="corpus_url" value={this.state.corpusUrl} onChange={this.handleChangeCorpus} />
+  Topic Model: <input style={{width:"200px",border:"1px solid gray"}} type="text" name="tm_url" value={this.state.topicModelUrl} onChange={this.handleChangeTM} />
   <br/>
   <input type="submit" value="Update settings" />
 </form>
