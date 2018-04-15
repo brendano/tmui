@@ -6,6 +6,9 @@ import * as _ from 'lodash';
 // import wait from 'wait.for-es6';
 // var wait=require('wait.for-es6');
 
+// >>> print json.dumps(nltk.corpus.stopwords.words("english"))
+const ENGLISH_STOPWORDS = new Set(["i", "me", "my", "myself", "we", "our", "ours", "ourselves", "you", "your", "yours", "yourself", "yourselves", "he", "him", "his", "himself", "she", "her", "hers", "herself", "it", "its", "itself", "they", "them", "their", "theirs", "themselves", "what", "which", "who", "whom", "this", "that", "these", "those", "am", "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "having", "do", "does", "did", "doing", "a", "an", "the", "and", "but", "if", "or", "because", "as", "until", "while", "of", "at", "by", "for", "with", "about", "against", "between", "into", "through", "during", "before", "after", "above", "below", "to", "from", "up", "down", "in", "out", "on", "off", "over", "under", "again", "further", "then", "once", "here", "there", "when", "where", "why", "how", "all", "any", "both", "each", "few", "more", "most", "other", "some", "such", "no", "nor", "not", "only", "own", "same", "so", "than", "too", "very", "s", "t", "can", "will", "just", "don", "should", "now", "d", "ll", "m", "o", "re", "ve", "y", "ain", "aren", "couldn", "didn", "doesn", "hadn", "hasn", "haven", "isn", "ma", "mightn", "mustn", "needn", "shan", "shouldn", "wasn", "weren", "won", "wouldn"]);
+
 
 export class Corpus {
   docid2doc: object = {};
@@ -141,10 +144,64 @@ export class TopicModel implements TopicModelInfo {
       return -p_w_k*Math.log(p_w_k/p_w);
     };
     words = _.sortBy(words, scorefn);
-    words = words.slice(0,topk);
+    // words = words.slice(0,topk);
+    words = ranked_phrase_merge(words, topk);
     return words;
   }
 
+}
+
+/** Take in RANKED (leftmost is highest) list of phrases (assuming underscore separator).
+ * Return num_desired phrase clusters, where each cluster is a connected component of input terms
+ * that share a non-stopword.
+ * 
+ */
+export function ranked_phrase_merge(wordlist:string[], num_desired:number) {
+  // Build up a ranked list of term clusters to return.
+  // ES6 Map is supposed to preserve insertion order, so we can use that.
+  // Note we will sometimes delete things from this list.
+  let resultlist = new Map<number,Set<string>>();
+
+  let get_uniset = (term) => new Set(term.split("_").filter((w)=> !ENGLISH_STOPWORDS.has(w)));
+  // let get_uniset = (term) => new Set(term.split("_"));
+
+  for (let i=0; i<wordlist.length; i++) {
+    let cur_w = wordlist[i];
+    let cur_uniset = new Set(get_uniset(cur_w));
+
+    // find all previous clusters the current term matches.
+    // then merge all of them into the highest-ranked one.
+    let matches = Array.from(resultlist.entries()).filter(
+      ([prev_i, prev_cluster]) => 
+        Array.from(prev_cluster).some((prev_w) => {
+          let prev_uniset = get_uniset(prev_w);
+          return utils.setintersect(prev_uniset, cur_uniset).size > 0;
+        })
+    );
+    if (matches.length==0) {
+      resultlist.set(i, new Set([cur_w]));
+    }
+    else {
+      // merge.  set new cluster at position of highest-ranked match
+      let newclus = utils.setunion_many(matches.map(([prev_i, prev_cluster]) => prev_cluster));
+      newclus.add(cur_w);
+      let new_i = matches[0][0];
+      resultlist.set(new_i, newclus);
+      // delete all non-highest, now-merged old clusters
+      matches.slice(1,matches.length).forEach( ([prev_i, prev_cluster]) => {
+        resultlist.delete(prev_i);
+      });
+    }
+    // slightly better would be to fill up the last cluster
+    if (resultlist.size >= num_desired) {
+      break;
+    }
+  }
+  // For each cluster, have to choose a single string representation
+  let ret = Array.from(resultlist.values()).map( (cluster:Set<string>) => {
+    return _.sortBy(Array.from(cluster), (term) => -term.length)[0];
+  })
+  return ret;
 }
 
 export * from './models';

@@ -23,4 +23,13 @@ async function f2() {
   // console.log(a.data);
 }
 
-f2();
+// f2();
+
+function f3() {
+  console.log(models.ranked_phrase_merge([ "A", "B"], 99));
+  console.log(models.ranked_phrase_merge([ "A", "B", "A_B"], 99));
+  console.log(models.ranked_phrase_merge([ "A", "B", "C", "D", "B_D"], 99));
+  console.log(models.ranked_phrase_merge([ "A", "B", "C", "D", "B_D", "C_D"], 99));
+}
+f3()
+
