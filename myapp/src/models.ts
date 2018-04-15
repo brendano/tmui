@@ -77,12 +77,22 @@ export class TopicModel implements TopicModelInfo {
   readonly n_topic_doc_dicts: Array<Map<string,number>>;
   readonly doclengths:object;
   readonly vocab:string[];
+  word_total_counts;
+  token_total_count:number;
 
   constructor(data:TopicModelInfo) {
     // should i use .keys() or something else?
     for (let key in data) {
       this[key] = data[key];
     }
+
+    this.token_total_count = utils.arraysum(this.n_topic);
+    this.word_total_counts = {};
+    this.vocab.forEach((w) => {
+      let Nw = utils.arraysum(_.range(this.num_topics).map((k) => (this.n_topic_word_dicts[k][w] || 0) ));
+      // console.log(w + " " + Nw);
+      this.word_total_counts[w] = Nw;
+    });
   }
   
   public docTopicProbs(docid:string) {
@@ -100,6 +110,10 @@ export class TopicModel implements TopicModelInfo {
     return probs;
   }
 
+  public wordGlobalProb(word:string) {
+    return this.word_total_counts[word] / this.token_total_count;
+  }
+
   public topicGlobalProb(topic:number) {
     let Ncorpus = utils.arraysum(this.n_topic);
     return this.n_topic[topic]/Ncorpus;
@@ -108,7 +122,24 @@ export class TopicModel implements TopicModelInfo {
   topicWords(topic:number, topk:number): string[] {
     let wc = this.n_topic_word_dicts[topic];
     let words = this.vocab.filter( (w)=>wc[w] && wc[w]>0);
-    let scorefn = (w) => -wc[w];  // prob ranking .. or could use pmi, hpmi...
+    // simple prob ranking
+    // let scorefn = (w) => -wc[w];
+
+    // p(k|w) aka PMI ranking, with thresholding
+    // let scorefn = (w) => {
+    //   let Nw = this.word_total_counts[w];
+    //   if (Nw < 100) return 0;
+    //   return -wc[w]/Nw;
+    // };
+
+    // p(w,k)*PMI(w,k) \propto p(w|k)*PMI(w,k)  "half-pmi"
+    let scorefn = (w) => {
+      // if (wc[w]==0) return 999;
+      let p_w = this.wordGlobalProb(w);
+      let p_w_k = wc[w]/this.n_topic[topic];
+      // let p_wk = wc[w]/this.token_total_count;
+      return -p_w_k*Math.log(p_w_k/p_w);
+    };
     words = _.sortBy(words, scorefn);
     words = words.slice(0,topk);
     return words;

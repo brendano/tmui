@@ -21,6 +21,14 @@
   border: 1px solid black;
   font-size:9pt;  
 }
+/* how to vertical align???? */
+.TopicWordList .ReactVirtualized__Table__rowColumn {
+  /* display: table; */
+  vertical-align:top;
+}
+.TopicWords {
+  vertical-align:top;
+}
 .LayoutTable {
   height:80vh;
 }

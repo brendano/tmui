@@ -26,6 +26,7 @@ export class DocList extends React.Component<any,DocListState> {
     return app.state.topicModel;
   }
   topicProbCellRenderer = ({rowData}) => {
+    if (!this.topicModel()) return "";
     let doc:models.Document = rowData;
     let probs = this.topicModel().docTopicProbs(doc.docid);
     let x = Array.from(probs).map((prob,k)=> [prob,k])

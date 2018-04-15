@@ -16,6 +16,7 @@ interface TopicWordListState {
 
 export class TopicWordList extends React.Component<TopicWordListProps,TopicWordListState> {
   state={selected_topic:null};
+
   renderTopicWords = ({rowData:index}) => {
     console.log("RTW " + index);
     let topic = index;   // todo change when resortable
@@ -23,9 +24,9 @@ export class TopicWordList extends React.Component<TopicWordListProps,TopicWordL
     if (!tm) return "";
     
     return <div className="TopicWords" key={"TW"+topic}
-      style={{whiteSpace:"normal", color:A.topicColor(topic)}}
+      style={{whiteSpace:"normal", verticalAlign:"top", color:A.topicColor(topic)}}
     >
-      {tm.topicWords(topic, 10).join(", ")}
+      {tm.topicWords(topic, 10).map((w)=>w.replace("_"," ")).join(", ")}
     </div>;
   }
   renderTopicNumber = ({rowData:i}) => {
@@ -33,7 +34,7 @@ export class TopicWordList extends React.Component<TopicWordListProps,TopicWordL
   }
   render() {
     let tm = this.props.topicModel;
-    if (!tm) return "NULL TM";
+    if (!tm) return "null..tm..";
     return <Table className="TopicWordList" height={500} width={350}
       headerHeight={20} rowHeight={40}
       rowCount={tm.num_topics}
@@ -43,7 +44,7 @@ export class TopicWordList extends React.Component<TopicWordListProps,TopicWordL
         cellRenderer={this.renderTopicNumber}
       />
 
-      <Column label="Propor" dataKey="NA" width={50} cellDataGetter={(x)=>null}
+      <Column label="Propor" dataKey="NA" width={35} cellDataGetter={(x)=>null}
         style={{textAlign:"center"}}
         cellRenderer={({rowData:i})=> {
           let p = this.props.topicModel.topicGlobalProb(i);
