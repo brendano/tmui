@@ -1,5 +1,6 @@
 """
-Post-process Mallet tmstate output to view topics
+Post-process Mallet tmstate output to view topics.
+This was more of a test that I understood the tmstate format if anything.
 """
 from __future__ import division
 import phrasehelp
