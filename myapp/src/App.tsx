@@ -14,6 +14,7 @@ interface AppState {
   corpus?: models.Corpus;
   topicModel?: models.TopicModel;
   docidSelection?: string;
+  selectedTopic?: number;
 }
 
 class App extends React.Component<{},AppState> {
@@ -46,6 +47,7 @@ class App extends React.Component<{},AppState> {
   }
 
   render() {
+    console.log("APP render");
     return (
 <div className="App">
 <header className="App-header">
@@ -61,10 +63,10 @@ class App extends React.Component<{},AppState> {
 </div>
 <table className="LayoutTable"><tbody><tr>
   <td style={{verticalAlign:"top"}}>
-      <TopicWordList topicModel={this.state.topicModel} />
+    <TopicWordList app={this} topicModel={this.state.topicModel} selectedTopic={this.state.selectedTopic} />
   </td>
   <td style={{verticalAlign:"top"}}>
-    <DocList app={this} />
+    <DocList app={this} selectedTopic={this.state.selectedTopic} />
   </td>
   <td style={{verticalAlign:"top"}}>
     <DocViewer corpus={this.state.corpus} docid={this.state.docidSelection} />
@@ -90,18 +92,18 @@ interface DocViewerProps {
 
 class DocViewer extends React.Component<DocViewerProps,{}> {
   render() {
-    let text = null;
-    if (this.props.corpus !== undefined) {
-      let doc = this.props.corpus.docid2doc[this.props.docid];
-      text = doc ? doc.text : "";
-    } else {
-      text = "";
+    if (this.props.corpus==null || this.props.docid==null) {
+      return <div className="DocViewer container"></div>;
     }
+    let doc = this.props.corpus.docid2doc[this.props.docid];
+    let text = doc ? doc.text : "";
     return (
       <div className="DocViewer container">
-      <div className="DocViewer content">
-      {text}
-      </div>
+        <i>Document {this.props.docid}</i>
+        <br/><br/>
+        <div className="DocViewer content">
+        {text}
+        </div>
       </div>
     );
   }

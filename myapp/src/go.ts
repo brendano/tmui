@@ -15,7 +15,7 @@ async function f2() {
   console.log(d.num_topics);
   console.log(d.docTopicProbs("billbudget/billparts.phrases.malletdir/page138.txt"));
   for (let k=0; k<d.num_topics; k++) {
-    console.log(k + " || " + d.topicWords(k,10));
+    // console.log(k + " || " + d.topicWords(k,10));
   }
   // console.log(JSON.parse(b));
   // let c:TopicModelInfo = b;

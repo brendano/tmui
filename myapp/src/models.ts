@@ -122,27 +122,40 @@ export class TopicModel implements TopicModelInfo {
     return this.n_topic[topic]/Ncorpus;
   }
 
-  topicWords(topic:number, topk:number): string[] {
+  topicWords(topic:number, topk:number, {rankFormula, countThreshold}): string[] {
     let wc = this.n_topic_word_dicts[topic];
     let words = this.vocab.filter( (w)=>wc[w] && wc[w]>0);
-    // simple prob ranking
-    // let scorefn = (w) => -wc[w];
+    let scorefn;
+    rankFormula = rankFormula || "hpmi";
 
-    // p(k|w) aka PMI ranking, with thresholding
-    // let scorefn = (w) => {
-    //   let Nw = this.word_total_counts[w];
-    //   if (Nw < 100) return 0;
-    //   return -wc[w]/Nw;
-    // };
+    let ct:number = countThreshold;
+    if (ct==0 || ct===undefined || ct===null) ct=1;
+    words = words.filter((w) => this.word_total_counts[w] >= ct);
 
-    // p(w,k)*PMI(w,k) \propto p(w|k)*PMI(w,k)  "half-pmi"
-    let scorefn = (w) => {
-      // if (wc[w]==0) return 999;
-      let p_w = this.wordGlobalProb(w);
-      let p_w_k = wc[w]/this.n_topic[topic];
-      // let p_wk = wc[w]/this.token_total_count;
-      return -p_w_k*Math.log(p_w_k/p_w);
-    };
+    if (rankFormula=="prob") {
+      scorefn = (w) => -wc[w];
+    }
+    else if (rankFormula=="hpmi") {
+      // p(w,k)*PMI(w,k) \propto p(w|k)*PMI(w,k)  "half-pmi"
+      scorefn = (w) => {
+        // if (wc[w]==0) return 999;
+        let p_w = this.wordGlobalProb(w);
+        let p_w_k = wc[w]/this.n_topic[topic];
+        // let p_wk = wc[w]/this.token_total_count;
+        return -p_w_k*Math.log(p_w_k/p_w);
+      };
+    }
+    else if (rankFormula=="pmi") {
+      // p(k|w) aka PMI ranking, with thresholding
+      scorefn = (w) => {
+        let Nw = this.word_total_counts[w];
+        if (Nw < ct) return 0;
+        return -wc[w]/Nw;
+      };
+    }
+    else {
+      throw "bad formula option: " + rankFormula
+    }
     words = _.sortBy(words, scorefn);
     // words = words.slice(0,topk);
     words = ranked_phrase_merge(words, topk);
