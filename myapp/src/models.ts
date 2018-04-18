@@ -173,7 +173,6 @@ export class TopicModel implements TopicModelInfo {
 /** Take in RANKED (leftmost is highest) list of phrases (assuming underscore separator).
  * Return num_desired phrase clusters, where each cluster is a connected component of input terms
  * that share a non-stopword.
- * 
  */
 export function ranked_phrase_merge(wordlist:string[], num_desired:number) {
   // Build up a ranked list of term clusters to return.

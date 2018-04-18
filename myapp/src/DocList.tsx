@@ -12,6 +12,7 @@ interface DocListState {
   explicitTopicThresholdString: string;
   // predicate: "filter" | "order";
   predicate: string;
+  topicProbVisMode: "numbers" | "shapes";
 }
 
 interface DocListProps {
@@ -27,7 +28,9 @@ export class DocList extends React.Component<DocListProps,DocListState> {
   constructor(props) {
     super(props);
     console.log("DL consructor");
-    this.state = {predicate:"order", explicitTopicThreshold:0.50, explicitTopicThresholdString:"0.50"};
+    this.state = {predicate:"order", explicitTopicThreshold:0.50, explicitTopicThresholdString:"0.50",
+      topicProbVisMode:"numbers"
+    };
     this.docListCache = new Map();
   }
 
@@ -65,16 +68,19 @@ export class DocList extends React.Component<DocListProps,DocListState> {
     if (!this.topicModel()) return "";
     let doc:models.Document = rowData;
     let probs = this.topicModel().docTopicProbs(doc.docid);
-    let x = Array.from(probs).map((prob,k)=> [prob,k])
-      .filter(([p,k])=>p>0);
-    let s = _.sortBy(x, ([p,k])=> -p)
-      .map( ([prob,k],i)=>
-          <span className="docTopicProb" style={{color:A.topicColor(k)}} key={k}>
-            <span className="topicNum">{k}:</span>
-            <span className="topicProb">{(Math.max(prob,0.01)*100).toFixed(0)}%</span>
-          </span>
-      );
-    return s;
+    let prob_ks = Array.from(probs).map((prob,k)=> [prob,k]).filter(([p,k])=>p>0);
+    prob_ks = _.sortBy(prob_ks, ([p,k])=> -p);
+    if (this.state.topicProbVisMode=="numbers") {
+      return prob_ks.map( ([prob,k],i)=>
+        <span className="docTopicProb" style={{color:A.topicColor(k)}} key={k}>
+          <span className="topicNum">{k}:</span>
+          <span className="topicProb">{(Math.max(prob,0.01)*100).toFixed(0)}%</span>
+        </span>);
+    }
+    else if (this.state.topicProbVisMode=="shapes") {
+      return "todo";
+    }
+    throw "error";
   }
   render() {
     // console.log("DOCLIST render");
