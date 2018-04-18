@@ -133,13 +133,11 @@ export class TopicModel implements TopicModelInfo {
   topicWords(topic:number, topk:number, {rankFormula, countThreshold}): string[] {
     let wc = this.n_topic_word_dicts[topic];
     let words = this.vocab.filter( (w)=>wc[w] && wc[w]>0);
-    let scorefn;
-    rankFormula = rankFormula || "hpmi";
-
-    let ct:number = countThreshold;
-    if (ct==0 || ct===undefined || ct===null) ct=1;
+    let ct:number = countThreshold || 1;
     words = words.filter((w) => this.word_total_counts[w] >= ct);
 
+    let scorefn;
+    rankFormula = rankFormula || "hpmi";
     if (rankFormula=="prob") {
       scorefn = (w) => -wc[w];
     }
