@@ -57,11 +57,13 @@ export class TopicWordList extends React.Component<TopicWordListProps,TopicWordL
       <select value={this.state.rankFormula} onChange={this.updateRankFormula}>
         <option value="hpmi" title="Both distinctive and common: p(w|k) log[p(w|k)/p(w)] (Weighted PMI)">Info</option>
         <option value="prob" title="Most common: p(w|k)">Prob</option>
-        <option value="pmi" title="Most distinctive: p(w|k)/p(w) ∝ p(k|w) (same ranking as PMI)">Lift</option>
+        <option value="pmi" title="Most distinctive: p(w|k)/p(w) ∝ p(k|w) (same ranking as PMI). 
+          The resulting ranking is very sensitive to the frequency threshold."
+          >Lift</option>
       </select>
       <div style={{display: this.state.rankFormula=="pmi" ? "hidden" : "inline", paddingLeft:"1em"}}>
-        Count thresh:
-        <input type="text" value={this.state.countThresholdString} style={{width:"80px"}}
+        with count at least:
+        <input type="text" value={this.state.countThresholdString} style={{width:"6ch"}}
           onChange={this.countThresholdUpdate}
         />
       </div>

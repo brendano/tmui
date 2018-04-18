@@ -23,7 +23,7 @@ class App extends React.Component<{},AppState> {
     super(props);
     this.state = {
       corpusUrl:    "tmrun/sotu/sotu.phrases.jsonl",
-      topicModelUrl:"tmrun/sotu/sotu.tm10.tminfo.json"
+      topicModelUrl:"tmrun/sotu/sotu.tm30.tminfo.json"
     };
     this.loadCorpus();
     this.loadTopicModel();
@@ -47,7 +47,6 @@ class App extends React.Component<{},AppState> {
   }
 
   render() {
-    console.log("APP render");
     return (
 <div className="App">
 <header className="App-header">
@@ -58,9 +57,6 @@ class App extends React.Component<{},AppState> {
   <br/>
   <input type="submit" value="Update settings" />
 </form>
-<div>
-  {this.state.corpus && this.state.corpus.numDocs()} docs
-</div>
 <table className="LayoutTable"><tbody><tr>
   <td style={{verticalAlign:"top"}}>
     <TopicWordList app={this} topicModel={this.state.topicModel} selectedTopic={this.state.selectedTopic} />
@@ -98,7 +94,7 @@ class DocViewer extends React.Component<DocViewerProps,{}> {
     let doc = this.props.corpus.docid2doc[this.props.docid];
     let text = doc ? doc.text : "";
     return (
-      <div className="DocViewer container">
+      <div className="DocViewer container" style={{maxWidth:"400px"}}>
         <i>Document {this.props.docid}</i>
         <br/><br/>
         <div className="DocViewer content">

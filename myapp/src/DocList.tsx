@@ -8,26 +8,53 @@ import * as _ from 'lodash';
 import './App.css';
 
 interface DocListState {
+  explicitTopicThreshold?: number;
+  explicitTopicThresholdString: string;
+  // predicate: "filter" | "order";
+  predicate: string;
 }
+
 interface DocListProps {
   app: App;
   selectedTopic:number;
 }
 
+let MINIMUM_TOPIC_THRESH:number = 0.01;
+
 export class DocList extends React.Component<DocListProps,DocListState> {
+  docListCache: Map<string,models.Document[]>;
+
   constructor(props) {
     super(props);
-    this.state = {selection:null, sort:null};
+    console.log("DL consructor");
+    this.state = {predicate:"order", explicitTopicThreshold:0.50, explicitTopicThresholdString:"0.50"};
+    this.docListCache = new Map();
   }
+
+  getDocListCacheKey() {
+    return `${this.state.predicate} ${this.state.explicitTopicThreshold} ${this.props.selectedTopic}`;
+  }
+
   curdoclist() {
+    // console.log("curdoclist");
+    if (this.docListCache.has(this.getDocListCacheKey())) {
+      return this.docListCache.get(this.getDocListCacheKey());
+    }
+    console.log("curdoclist not cached: " + this.getDocListCacheKey());
     let app:App = this.props.app;
-    let doclist = app.state.corpus && app.state.corpus.doclist;
-    doclist = doclist || [];
+    let doclist:models.Document[] = app.state.corpus ? app.state.corpus.doclist : [];
     if (this.props.selectedTopic != null) {
       let k = this.props.selectedTopic;
       let tm=this.topicModel();
-      doclist = _.sortBy(doclist, (d) => -tm.docTopicProbs(d.docid)[k])
+      let thresh = (this.state.predicate=="filter") ? this.state.explicitTopicThreshold
+        : (this.state.predicate=="order") ? MINIMUM_TOPIC_THRESH : null;
+      if (thresh==null) throw "threhsold bug";
+      doclist = doclist.filter((d) => tm.docTopicProbs(d.docid)[k] >= thresh );
+      if (this.state.predicate=="order") {
+        doclist = _.sortBy(doclist, (d) => -tm.docTopicProbs(d.docid)[k])
+      }
     }
+    this.docListCache.set(this.getDocListCacheKey(), doclist);
     return doclist;
   }
   topicModel() {
@@ -51,15 +78,46 @@ export class DocList extends React.Component<DocListProps,DocListState> {
   }
   render() {
     // console.log("DOCLIST render");
+    let width = 300;
     let app:App = this.props.app;
     let doclist = this.curdoclist();
-    let topinfo = (
-      this.props.selectedTopic != null ? 
-        <span>ordered by <span style={{color:A.topicColor(this.props.selectedTopic)}}>topic {this.props.selectedTopic}</span></span>
-      : <span>by corpus order</span>);
-
-    return <div>
-      Documents {topinfo}
+    let k=this.props.selectedTopic;
+    let topinfo = [];
+    if (this.props.selectedTopic == null) {
+      topinfo.push(<span>by corpus order</span>);
+    }
+    else {
+      topinfo.push(<select value={this.state.predicate}
+          onChange={(e)=>this.setState({predicate: e.target.value}) } >
+        <option value="order">ordered by</option>
+        <option value="filter">filtered to</option>
+      </select>);
+      topinfo.push(<span style={{color:A.topicColor(k)}}>&nbsp;topic {k}</span>);
+      if (this.state.predicate=="order") {
+        topinfo.push(<span>&nbsp;with proportion at least 1%</span>);
+      }
+      else if (this.state.predicate=="filter") {
+        topinfo.push(<span>
+          &nbsp;with proportion at least
+            <input type="text" style={{width:"5ch"}} value={this.state.explicitTopicThresholdString}
+              onChange={(e) => {
+                this.setState({explicitTopicThresholdString:e.target.value});
+                let x:number = parseFloat(e.target.value);
+                if (isFinite(x)) {
+                  this.setState({explicitTopicThreshold:x})
+                } else {
+                  this.setState({explicitTopicThreshold:0.01})
+                }
+              }}
+            />
+        </span>);
+      }
+      else {
+        throw "bad predicate value: " + this.state.predicate;
+      }
+    }
+    return <div style={{width:width}}>
+      <span style={{minWidth:"5ch", display:"inline-block", textAlign:"center"}}>{doclist.length}</span> documents {topinfo}
       <Table
         className="DocList"
         width={300}

@@ -78,6 +78,7 @@ export class TopicModel implements TopicModelInfo {
   readonly n_topic:number;
   readonly n_topic_word_dicts: Array<Map<string,number>>;
   readonly n_topic_doc_dicts: Array<Map<string,number>>;
+  docTopicProbsCache: Map<string,Float32Array>;
   readonly doclengths:object;
   readonly vocab:string[];
   word_total_counts;
@@ -88,6 +89,7 @@ export class TopicModel implements TopicModelInfo {
     for (let key in data) {
       this[key] = data[key];
     }
+    this.docTopicProbsCache = new Map();
 
     this.token_total_count = utils.arraysum(this.n_topic);
     this.word_total_counts = {};
@@ -100,7 +102,11 @@ export class TopicModel implements TopicModelInfo {
   
   public docTopicProbs(docid:string) {
     if (!this.doclengths[docid]) {
+      // console.log("unseen docid " + docid);
       return new Float32Array(this.num_topics).fill(0);
+    }
+    if (this.docTopicProbsCache.has(docid)) {
+      return this.docTopicProbsCache.get(docid);
     }
     let probs = new Float32Array(this.num_topics);
     let N = this.doclengths[docid];
@@ -108,8 +114,8 @@ export class TopicModel implements TopicModelInfo {
     for (let k=0; k<this.num_topics; k++) {
       probs[k] = (this.n_topic_doc_dicts[k][docid] || 0.0) / N;
     }
-    
     if ( Math.abs(utils.arraysum(probs) - 1) > 1e-5) throw "normalization error";
+    this.docTopicProbsCache[docid] = probs;
     return probs;
   }
 
