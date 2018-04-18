@@ -101,12 +101,14 @@ export class TopicModel implements TopicModelInfo {
   }
   
   public docTopicProbs(docid:string) {
-    if (!this.doclengths[docid]) {
-      // console.log("unseen docid " + docid);
-      return new Float32Array(this.num_topics).fill(0);
-    }
     if (this.docTopicProbsCache.has(docid)) {
       return this.docTopicProbsCache.get(docid);
+    }
+    if (!this.doclengths[docid]) {
+      // console.log("unseen docid " + docid);
+      let r = new Float32Array(this.num_topics).fill(0);
+      this.docTopicProbsCache.set(docid,r);
+      return r;
     }
     let probs = new Float32Array(this.num_topics);
     let N = this.doclengths[docid];
