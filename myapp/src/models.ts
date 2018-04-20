@@ -65,19 +65,23 @@ export async function loadTopicModel(url:string) {
 }
 
 export interface TopicModelInfo {
-  readonly num_topics:number;
-  readonly n_topic:number;
+  readonly num_topics:number;  // the number of topics
+  readonly n_topic:number[];   // list (length num_topics): global token count per topic
+  readonly doclengths:object;  // (docid as string) => num tokens in that doc
+  readonly vocab:string[];     // model vocabulary as a list of strings.
+
+  // list (length num_topics) => (word as string) => word's count in that topic 
   readonly n_topic_word_dicts: Array<Map<string,number>>;
+
+  // list (length num_topics) => (docid as string) => topic count in that doc 
   readonly n_topic_doc_dicts: Array<Map<string,number>>;
-  readonly doclengths:object;
-  readonly vocab:string[];
 }
 
 export class TopicModel implements TopicModelInfo {
   readonly num_topics:number;
-  readonly n_topic:number;
+  readonly n_topic:number[];
   readonly n_topic_word_dicts: Array<Map<string,number>>;
-  readonly n_topic_doc_dicts: Array<Map<string,number>>;
+  readonly n_topic_doc_dicts: Array<Map<string,number>>;  
   docTopicProbsCache: Map<string,Float32Array>;
   readonly doclengths:object;
   readonly vocab:string[];
