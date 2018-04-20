@@ -4,6 +4,7 @@ tmrun/ => pipeline to fit a mallet topic model and export the data for the app
 myapp/ => the webapp itself (needs a better name!)
 for the app, "npm install", "npm start", and/or "npm run build" should run it
 
+
 DATA FORMATS
 Currently two files are needed to make it work.
 
@@ -14,6 +15,17 @@ Currently two files are needed to make it work.
 (2) The topic model JSON.  One file is just one big JSON with a bunch of keys.
 See myapp/src/models.ts:TopicModelInfo.
 
+
+EXAMPLES
+
+Corpus (it has an extra phrase counts key in it, but that's not necessary)
+http://hobbes.cs.umass.edu/~brenocon/tmui_app/tmrun/sotu/sotu.phrases.jsonl
+
+Topic model
+http://hobbes.cs.umass.edu/~brenocon/tmui_app/tmrun/sotu/sotu.tm10.tminfo.json
+
+
+NOTES
 
 todo: will need to decide on a tokenization representation (ideally
 reversible) and perhaps stuff it into the corpus JSONL?
