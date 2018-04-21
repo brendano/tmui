@@ -21,6 +21,7 @@ interface DocListProps {
 }
 
 let MINIMUM_TOPIC_THRESH:number = 0.01;
+let MINIMUM_TOPIC_THRESH_NICE_STRING:string = "1%";
 
 export class DocList extends React.Component<DocListProps,DocListState> {
   docListCache: Map<string,models.Document[]>;
@@ -100,7 +101,7 @@ export class DocList extends React.Component<DocListProps,DocListState> {
       </select>);
       topinfo.push(<span style={{color:A.topicColor(k)}}>&nbsp;topic {k}</span>);
       if (this.state.predicate=="order") {
-        topinfo.push(<span>&nbsp;with proportion at least 1%</span>);
+        topinfo.push(<span>&nbsp;with proportion at least {MINIMUM_TOPIC_THRESH_NICE_STRING}</span>);
       }
       else if (this.state.predicate=="filter") {
         topinfo.push(<span>
