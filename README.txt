@@ -7,6 +7,9 @@ HOW TO RUN:
 This will show it on the SOTU corpus.
 (cd myapp/prebuilt && python -m SimpleHTTPServer)
 
+Note it's actually static, but you have to look at it through a server because
+file:/// URLs don't work due to javascript mysteries.
+
 
 IMPORTING DATA:
 
