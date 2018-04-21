@@ -23,8 +23,10 @@ class App extends React.Component<{},AppState> {
   constructor(props:any) {
     super(props);
     this.state = {
-      corpusUrl:    "corpus.jsonl",  //"tmrun/sotu/sotu.phrases.jsonl",
-      topicModelUrl:"tminfo.json",   //"tmrun/sotu/sotu.tm30.tminfo.json"
+      corpusUrl:    "corpus.jsonl",
+      topicModelUrl:"tminfo.json",
+      // corpusUrl:    "tinycorpus/corpus.jsonl",
+      // topicModelUrl:"tinycorpus/tminfo.json",
     };
     this.loadCorpus();
     this.loadTopicModel();

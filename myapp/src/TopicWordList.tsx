@@ -20,6 +20,16 @@ interface TopicWordListState {
 
 export class TopicWordList extends React.Component<TopicWordListProps,TopicWordListState> {
   state = {rankFormula:"hpmi", countThreshold:10,countThresholdString:"10"};
+  constructor(props) {
+    super(props);
+    let state = {rankFormula:"hpmi", countThreshold:10,countThresholdString:null};
+    // this is buggy. it gets an undefined topicmodel object. the loading code and order had to be revamped.
+    let tm:models.TopicModel = props.topicModel;
+    let t = (tm && tm.token_total_count > 10000) ? 10 : 1;
+    state.countThreshold = t;
+    state.countThresholdString = t.toString();
+    this.state = state;
+  }
 
   renderTopicWords = ({rowData:index}) => {
     // console.log("RTW " + index + " state " + this.state.rankFormula );
