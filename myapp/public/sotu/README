@@ -1,0 +1,4 @@
+was from
+cp ../../../tmrun/sotu/sotu.phrases.jsonl corpus.jsonl
+cp ../../../tmrun/sotu/sotu.tm30.tminfo.json tminfo.json
+
