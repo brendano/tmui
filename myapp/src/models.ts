@@ -21,9 +21,9 @@ export class Corpus {
 }
 
 export interface Document {
-  docid: string
-  text?: string
-  // will it allow more?
+  docid: string;
+  text?: string;
+  tokens?: string[];  // intended for non-reversible list of non-WS tokens. but could accomodate WS tokens too?
 }
 
 /* this function is a bad idea */
@@ -123,6 +123,20 @@ export class TopicModel implements TopicModelInfo {
     if ( Math.abs(utils.arraysum(probs) - 1) > 1e-5) throw "normalization error";
     this.docTopicProbsCache[docid] = probs;
     return probs;
+  }
+
+  public docsetTopicProbs(docids:string[]) {
+    let probs = new Float32Array(this.num_topics).fill(0);
+    // accumulate counts actually
+    for (let docid of docids) {
+      if (!this.doclengths[docid]) continue;
+      for (let k=0; k<this.num_topics; k++) {
+        probs[k] += this.n_topic_doc_dicts[k][docid];
+      }
+    }
+    utils.arraynormalize_inplace(probs);
+    return probs;
+
   }
 
   public wordGlobalProb(word:string) {

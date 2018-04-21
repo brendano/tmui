@@ -6,6 +6,7 @@ import * as _ from 'lodash';
 import './App.css';
 import {DocList} from './DocList';
 import {TopicWordList} from './TopicWordList';
+import {DocViewerSimple} from './DocViewer';
 import * as models from './models';
 
 interface AppState {
@@ -65,7 +66,7 @@ class App extends React.Component<{},AppState> {
     <DocList app={this} selectedTopic={this.state.selectedTopic} />
   </td>
   <td style={{verticalAlign:"top"}}>
-    <DocViewer corpus={this.state.corpus} docid={this.state.docidSelection} />
+    <DocViewerSimple corpus={this.state.corpus} docid={this.state.docidSelection} />
   </td>
 </tr></tbody></table>
 </div>
@@ -80,29 +81,3 @@ export function topicColor(k:number) {
   return xx[k % xx.length];
 
 }
-
-interface DocViewerProps {
-  docid:string;
-  corpus:models.Corpus;
-}
-
-class DocViewer extends React.Component<DocViewerProps,{}> {
-  render() {
-    if (this.props.corpus==null || this.props.docid==null) {
-      return <div className="DocViewer container"></div>;
-    }
-    let doc = this.props.corpus.docid2doc[this.props.docid];
-    let text = doc ? doc.text : "";
-    return (
-      <div className="DocViewer container" style={{maxWidth:"400px"}}>
-        <i>Document {this.props.docid}</i>
-        <br/><br/>
-        <div className="DocViewer content">
-        {text}
-        </div>
-      </div>
-    );
-  }
-
-}
-

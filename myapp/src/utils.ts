@@ -8,6 +8,18 @@ export function arraysum(x): number {
   return n;
 }
 
+export function arraydivide_inplace(arr: number[] | Float32Array | Float64Array, Z: number) {
+  for (let i=0; i<arr.length; i++) {
+    arr[i] = arr[i]/Z;
+  }
+  return arr;
+}
+
+export function arraynormalize_inplace(arr: number[] | Float32Array | Float64Array) {
+  let Z = arraysum(arr);
+  arraydivide_inplace(arr, Z);
+  return arr;
+}
 /** like numpy argsort() or R order()
  * first value of returned array is the index of the lowest input value.
  * second value of returned array is index of the second-lowest input value.
