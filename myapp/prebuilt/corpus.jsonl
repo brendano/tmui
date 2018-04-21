@@ -1,2 +1,1 @@
-{"docid":"doc1", "text":"I saw a cat.", "tokens":["I","saw","a","cat","."]}
-{"docid":"doc2", "text":"The cat is here.", "tokens":["The","cat","is","here","."]}
+../public/sotu/corpus.jsonl

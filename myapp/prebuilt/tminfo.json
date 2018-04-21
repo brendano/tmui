@@ -1,7 +1,1 @@
-{"num_topics": 2,
-  "n_topic": [4, 1],
-  "doclengths": {"doc1":3, "doc2":2},
-  "vocab":["i","saw","cat","here"],
-  "n_topic_word_dicts":[ {"i":1,"cat":2,"saw":1}, {"here":1} ],
-  "n_topic_doc_dicts": [{"doc1":3, "doc2":1}, {"doc2":1}]
-}
+../public/sotu/tminfo.json
