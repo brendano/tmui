@@ -70,11 +70,23 @@ export interface TopicModelInfo {
   readonly doclengths:object;  // (docid as string) => num tokens in that doc
   readonly vocab:string[];     // model vocabulary as a list of strings.
 
-  // list (length num_topics) => (word as string) => word's count in that topic 
-  readonly n_topic_word_dicts: Array<Map<string,number>>;
+  // need to give either count (n_) or probability (p_) versions
+  // count-based versions designed for collapsed inference (e.g. CGS)
 
-  // list (length num_topics) => (docid as string) => topic count in that doc 
-  readonly n_topic_doc_dicts: Array<Map<string,number>>;
+  // list (length num_topics) => (docid as string) => topic's count in that doc 
+  // n_topic_doc_dicts[3]["dog"] = num instances of 'dog' under topic 3
+  readonly n_topic_doc_dicts?: Array<Map<string,number>>;
+  
+  // list (length num_topics) => (word as string) => word's count in that topic 
+  // n_topic_doc_dicts[3]["doc0050"] = num tokens of topic 3 in doc0050
+  readonly n_topic_word_dicts?: Array<Map<string,number>>;
+
+  // list (length num_topics) => (docid as string) => topic's prob in that doc 
+  // p_topic_doc_dicts[3]["doc0050"] = P(z=3 | d=doc0050)
+  readonly p_topic_doc_dicts?: Array<Map<string,number>>;
+  // list (length num_topics) => (word as string) => word's prob in that topic 
+  // p_topic_word_dicts[3]["dog"] = P(w=dog | z=3)
+  readonly p_topic_word_dicts?: Array<Map<string,number>>;
 }
 
 export class TopicModel implements TopicModelInfo {
