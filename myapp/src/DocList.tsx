@@ -28,7 +28,6 @@ export class DocList extends React.Component<DocListProps,DocListState> {
 
   constructor(props) {
     super(props);
-    console.log("DL consructor");
     this.state = {predicate:"order", explicitTopicThreshold:0.50, explicitTopicThresholdString:"0.50",
       topicProbVisMode:"numbers"
     };

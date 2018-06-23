@@ -8,6 +8,7 @@ import {DocList} from './DocList';
 import {TopicWordList} from './TopicWordList';
 import {DocViewerSimple} from './DocViewer';
 import * as models from './models';
+import axios, {AxiosResponse} from 'axios';
 
 interface AppState {
   corpusUrl: string;
@@ -23,13 +24,39 @@ class App extends React.Component<{},AppState> {
   constructor(props:any) {
     super(props);
     this.state = {
-      corpusUrl:    "corpus.jsonl",
-      topicModelUrl:"tminfo.json",
-      // corpusUrl:    "tinycorpus/corpus.jsonl",
-      // topicModelUrl:"tinycorpus/tminfo.json",
+      corpusUrl:    "should_not_be_used_corpus.jsonl",
+      topicModelUrl:"should_not_be_used_tminfo.json",
     };
-    this.loadCorpus();
-    this.loadTopicModel();
+    this.constructorStuff();
+  }
+  async constructorStuff() {
+    await this.loadConfig();
+    console.log("about to loadcorpus");
+    await this.loadCorpus();
+    await this.loadTopicModel();
+  }
+
+  async loadConfig() {
+    console.log("loadconfig start");
+    let config = await this.fetchConfig();
+    if (config===null) {
+      // show error in ui?
+    } else {
+      this.setState({corpusUrl: config.corpusUrl, topicModelUrl: config.topicModelUrl  });
+    }
+  }
+  async fetchConfig() {
+    let config = await axios.get("config.json")
+    .then((resp:AxiosResponse) => {
+      return resp.data;
+    })
+    .catch((r) => {
+      console.log("ERROR " + r);
+      return null;
+    });
+    console.log("config:");
+    console.log(config);
+    return config;
   }
   async loadCorpus() {
     this.setState({corpus: await models.loadCorpus(this.state.corpusUrl)});  
@@ -37,7 +64,6 @@ class App extends React.Component<{},AppState> {
   async loadTopicModel() {
     this.setState({topicModel: await models.loadTopicModel(this.state.topicModelUrl)});
   }
-
   handleChangeCorpus = (e) => {
     // using this syntax, don't have to worry about .bind() to get 'this' right?
     this.setState({corpusUrl: e.target.value});
