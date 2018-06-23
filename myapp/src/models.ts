@@ -24,6 +24,30 @@ export interface Document {
   docid: string;
   text?: string;
   tokens?: string[];  // intended for non-reversible list of non-WS tokens. but could accomodate WS tokens too?
+  tokensSpacyStyle?: TokenSpacyStyle[];
+  tokensCoreNLPStyle?: TokenCoreNLPStyle[];
+}
+
+/* Try to use key names same as to Spacy API. They use trailing underscores for string versions; without trailing underscore are integer (hash) versions.  Or is this not worth trying to be consistent with? */
+export interface TokenSpacyStyle {
+  text: string;
+  whitespace_: string;  // trailing whitespace on the right
+  pos_?: string; // coarse POS tag
+  tag_?: string; // fine-grained POS tag
+}
+
+/** Key names same are CoreNLP json output from e.g. curl --data "The man wanted to go to work." 'http://localhost:9000/?properties={%22annotators%22%3A%22tokenize%2Cssplit%2Cpos%22}' 
+ */
+export interface TokenCoreNLPStyle {
+  originalText?: string;
+  word?: string;
+  lemma?: string;
+  pos?: string;  // i guess this is PTB-style, fine-grained tag
+  after?: string; //whitespace after this token
+  before?: string; //whitespace before this token. i guess this is repetitive?
+  characterOffsetBegin?: number;
+  characterOffsetEnd?: number;
+
 }
 
 /* this function is a bad idea */
@@ -65,10 +89,10 @@ export async function loadTopicModel(url:string) {
 }
 
 export interface TopicModelInfo {
-  readonly num_topics:number;  // the number of topics
-  readonly n_topic:number[];   // list (length num_topics): global token count per topic
-  readonly doclengths:object;  // (docid as string) => num tokens in that doc
-  readonly vocab:string[];     // model vocabulary as a list of strings.
+  readonly num_topics: number;  // the number of topics
+  readonly n_topic: number[];   // list (length num_topics): global token count per topic
+  readonly doclengths: object;  // (docid as string) => num tokens in that doc
+  readonly vocab: string[];     // model vocabulary as a list of strings.
 
   // need to give either count (n_) or probability (p_) versions
   // count-based versions designed for collapsed inference (e.g. CGS)
@@ -97,6 +121,7 @@ export class TopicModel implements TopicModelInfo {
   docTopicProbsCache: Map<string,Float32Array>;
   readonly doclengths:object;
   readonly vocab:string[];
+  vocab_set:Set<string> = new Set();
   word_total_counts;
   token_total_count:number;
 
@@ -107,6 +132,9 @@ export class TopicModel implements TopicModelInfo {
     }
     this.docTopicProbsCache = new Map();
 
+    for (let w of this.vocab) {
+      this.vocab_set.add(w);
+    }
     this.token_total_count = utils.arraysum(this.n_topic);
     this.word_total_counts = {};
     this.vocab.forEach((w) => {
@@ -156,11 +184,10 @@ export class TopicModel implements TopicModelInfo {
   }
 
   public topicGlobalProb(topic:number) {
-    let Ncorpus = utils.arraysum(this.n_topic);
-    return this.n_topic[topic]/Ncorpus;
+    return this.n_topic[topic]/this.token_total_count;
   }
 
-  topicWords(topic:number, topk:number, {rankFormula, countThreshold}): string[] {
+  public topicWords(topic:number, topk:number, {rankFormula, countThreshold}): string[] {
     let wc = this.n_topic_word_dicts[topic];
     let words = this.vocab.filter( (w)=>wc[w] && wc[w]>0);
     let ct:number = countThreshold || 1;
@@ -194,8 +221,33 @@ export class TopicModel implements TopicModelInfo {
     }
     words = _.sortBy(words, scorefn);
     // words = words.slice(0,topk);
-    words = ranked_phrase_merge(words, topk);
+    // words = ranked_phrase_merge(words, topk);
+    words = ranked_phrase_merge(words, -1, (retlist:string[])=> 
+      utils.arraysum(retlist.map((w)=>1+w.length)) >= 100 );
     return words;
+  }
+
+  topicWordProb(topic:number, word:string):number {
+    // add pseudocounts?
+    let numer = this.n_topic_word_dicts[topic][word];
+    let denom = this.n_topic[topic];
+    if (denom <= 0) {
+      return this.wordGlobalProb(word);
+    }
+    return numer / denom;
+  }
+
+  /** for figuring it out post-hoc. ideally we should have instead taken this as input from the topic model inference.
+   */
+  public inferTokenTopics(docid:string, word:string): Float32Array {
+    let prior = this.docTopicProbs(docid); // technically speaking it should use theta as prior... in the Gibbs sampler this is actually poserior proportion mean, not the theta prior.
+    if (!this.vocab_set.has(word)) return prior
+    let posterior = (new Float32Array(this.num_topics)).fill(0);
+    for (let k=0; k<this.num_topics; k++) {
+      posterior[k] = prior[k] * this.topicWordProb(k,word);
+    }
+    utils.arraynormalize_inplace(posterior);
+    return posterior;
   }
 
 }
@@ -204,12 +256,22 @@ export class TopicModel implements TopicModelInfo {
  * Return num_desired phrase clusters, where each cluster is a connected component of input terms
  * that share a non-stopword.
  */
-export function ranked_phrase_merge(wordlist:string[], num_desired:number) {
+export function ranked_phrase_merge(wordlist:string[],  num_desired: number,
+  is_done_yet?: Function
+) {
   // Build up a ranked list of term clusters to return.
   // ES6 Map is supposed to preserve insertion order, so we can use that.
   // Note we will sometimes delete things from this list.
   let resultlist = new Map<number,Set<string>>();
 
+  // For each cluster, have to choose a single string representation
+  let getReturnList = () => Array.from(resultlist.values()).map( (cluster:Set<string>) => {
+    return _.sortBy(Array.from(cluster), (term) => -term.length)[0];
+  });
+  let isDone = () => (
+    is_done_yet!==undefined ? is_done_yet(getReturnList()) :
+    resultlist.size >= num_desired
+  );
   let get_uniset = (term) => new Set(term.split("_").filter((w)=> !ENGLISH_STOPWORDS.has(w)));
   // let get_uniset = (term) => new Set(term.split("_"));
 
@@ -240,16 +302,13 @@ export function ranked_phrase_merge(wordlist:string[], num_desired:number) {
         resultlist.delete(prev_i);
       });
     }
-    // slightly better would be to fill up the last cluster
-    if (resultlist.size >= num_desired) {
+    // stop if we've passed the end criterion.
+    // slightly better might be to finish up the last cluster.
+    if (isDone()) {
       break;
     }
   }
-  // For each cluster, have to choose a single string representation
-  let ret = Array.from(resultlist.values()).map( (cluster:Set<string>) => {
-    return _.sortBy(Array.from(cluster), (term) => -term.length)[0];
-  })
-  return ret;
+  return getReturnList();
 }
 
 export * from './models';

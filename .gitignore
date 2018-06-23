@@ -1,4 +1,6 @@
 *.malletdir
+myapp/prebuilt1
+phrase_topicmodel_billbudget
 myapp/src/go.js
 myapp/src/models.js
 myapp/src/models.js

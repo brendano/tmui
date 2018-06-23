@@ -8,21 +8,21 @@ import * as _ from 'lodash';
 import './App.css';
 
 interface TopicWordListProps {
-  topicModel:models.TopicModel;
-  selectedTopic:number;
-  app:App;
+  topicModel: models.TopicModel;
+  selectedTopic: number;
+  app: App;
 }
 interface TopicWordListState {
   rankFormula: string;
-  countThreshold:number;
-  countThresholdString:string;
+  countThreshold: number;
+  countThresholdString: string;
 }
 
 export class TopicWordList extends React.Component<TopicWordListProps,TopicWordListState> {
-  state = {rankFormula:"hpmi", countThreshold:10,countThresholdString:"10"};
+
   constructor(props) {
     super(props);
-    let state = {rankFormula:"hpmi", countThreshold:10,countThresholdString:null};
+    let state = {rankFormula:"prob", countThreshold:10,countThresholdString:null};
     // this is buggy. it gets an undefined topicmodel object. the loading code and order had to be revamped.
     let tm:models.TopicModel = props.topicModel;
     let t = (tm && tm.token_total_count > 10000) ? 10 : 1;
@@ -65,11 +65,10 @@ export class TopicWordList extends React.Component<TopicWordListProps,TopicWordL
     return <div>
       Rank words by:
       <select value={this.state.rankFormula} onChange={this.updateRankFormula}>
-        <option value="hpmi" title="Both distinctive and common: p(w|k) log[p(w|k)/p(w)] (Weighted PMI)">Info</option>
         <option value="prob" title="Most common: p(w|k)">Prob</option>
-        <option value="pmi" title="Most distinctive: p(w|k)/p(w) ∝ p(k|w) (same ranking as PMI). 
-          The resulting ranking is very sensitive to the frequency threshold."
+        <option value="pmi" title="Most distinctive: p(w|k)/p(w) ∝ p(k|w) (same ranking as PMI).  The resulting ranking is very sensitive to the frequency threshold."
           >Lift</option>
+        <option value="hpmi" title="Both distinctive and common: p(w|k) log[p(w|k)/p(w)] (Weighted PMI)">Info</option>
       </select>
       <div style={{display: this.state.rankFormula=="pmi" ? "hidden" : "inline", paddingLeft:"1em"}}>
         with count at least:

@@ -17,7 +17,7 @@ interface DocListState {
 
 interface DocListProps {
   app: App;
-  selectedTopic:number;
+  selectedTopic: number;
 }
 
 let MINIMUM_TOPIC_THRESH:number = 0.01;

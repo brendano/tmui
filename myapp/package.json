@@ -2,7 +2,7 @@
   "name": "myapp",
   "version": "0.1.0",
   "private": true,
-  "homepage": "/",
+  "homepage": "http://hobbes.cs.umass.edu/~brenocon/tmui_app/",
   "dependencies": {
     "@types/d3": "^5.0.0",
     "@types/lodash": "^4.14.106",

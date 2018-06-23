@@ -1,4 +1,4 @@
-experiment for topic model viewing
+Client-side topic model viewer.  Loads the entire corpus and trained topic model on the client-side.
   tmrun/ => pipeline to fit a mallet topic model and export the data for the app
   myapp/ => the webapp itself (needs a better name!)
 
@@ -23,7 +23,7 @@ For simpler examples of what they look like, see:
 DATA FORMAT:
 
 (1) corpus.jsonl:  Each line is one JSON object with two keys:
- - docid  (string)
+ - docid  (string): these must be unique.
  - text  (string)
 
 (2) tminfo.json: The trained topic model.  The file is just one big JSON with

@@ -1,3 +1,5 @@
+# Only for commandline tests.  Can stop using if figure out how to use npm for commandline compiling
+#
 %.js: %.ts
 	tsc --lib DOM,ES6 $<
 
